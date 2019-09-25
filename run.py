@@ -17,7 +17,13 @@ for i in range(points):
 
 Plotter().plot(vs)
 
-v = Vector([1,2])
-v2 = v / 2
-v2 /= 2
+v1 = Vector([1,0])
+v2 = Vector([0,1])
+
+v3 = Vector([1,1])
+
+v3 += (v2 * 2)
+v3 -= Vector([3,1])
+print(v1)
 print(v2)
+print(v3)

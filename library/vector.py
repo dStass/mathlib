@@ -23,12 +23,17 @@ class Vector:
   def y(self):
     return self.__coordinates[1]
   
+  def z(self):
+    return self.__coordinates[2]
+  
   def copy(self):
     c = Vector((self.__coordinates).copy())
     return c
 
 
-  # Operators:
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #                         OPERATORS                         #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   #                          MULTILPY                         #
@@ -72,18 +77,17 @@ class Vector:
   # /= scalar:int
   @dispatch(int)
   def __itruediv__(self, scalar):
-    new_copy = self.copy()
     if scalar != 0:
-      new_copy *= 1/float(scalar)
-    return new_copy
+      self *= 1/float(scalar)
+    return self
 
   # /= scalar:float
   @dispatch(float)
   def __itruediv__(self, scalar):
-    new_copy = self.copy()
+    self = self.copy()
     if scalar != 0:
-      new_copy *= 1/float(scalar)
-    return new_copy
+      self *= 1/float(scalar)
+    return self
 
   # / scalar:int
   @dispatch(int)
@@ -100,3 +104,50 @@ class Vector:
     if scalar != 0:
       new_copy *= 1/float(scalar)
     return new_copy
+
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #                            PLUS                           #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+  # += object:Vector
+  def __iadd__(self, vec):
+    if type(vec) is Vector and vec.__dim == self.__dim:
+      for i in range(self.__dim):
+        self.__coordinates[i] += vec.__coordinates[i]
+      return self
+    else:
+      return None
+
+  # + object:Vector
+  def __add__(self, vec):
+    if type(vec) is Vector and vec.__dim == self.__dim:
+      new_copy = self.copy()
+      for i in range(self.__dim):
+        new_copy.__coordinates[i] += vec.__coordinates[i]
+      return new_copy
+    else:
+      return None
+
+
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #                        SUBTRACTION                        #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+  # += object:Vector
+  def __isub__(self, vec):
+    if type(vec) is Vector and vec.__dim == self.__dim:
+      for i in range(self.__dim):
+        self.__coordinates[i] -= vec.__coordinates[i]
+      return self
+    else:
+      return None
+
+  # + object:Vector
+  def __sub__(self, vec):
+    if type(vec) is Vector and vec.__dim == self.__dim:
+      new_copy = self.copy()
+      for i in range(self.__dim):
+        new_copy.__coordinates[i] -= vec.__coordinates[i]
+      return new_copy
+    else:
+      return None
