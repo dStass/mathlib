@@ -1,3 +1,4 @@
+from multipledispatch import dispatch
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -6,10 +7,8 @@ from library.vector import Vector
 class Plotter:
   PBUFFER = 0.1
   def plot(self, points):
-    
     range_x = [0,0]
     range_y = [0,0]
-
 
     xs = []
     ys = []
@@ -45,3 +44,11 @@ class Plotter:
 
     
     plt.savefig('plot.png')
+
+  @dispatch(int, int)
+  def add(self, x, y):
+    print(x+y)
+  
+  @dispatch(str, str)
+  def add(self, x, y):
+    print("STR")

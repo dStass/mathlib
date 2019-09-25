@@ -17,3 +17,8 @@ for i in range(points):
 
 
 Plotter().plot(vs)
+
+v = Vector([1,2])
+print(v)
+v *= 2.8
+print(v)

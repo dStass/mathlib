@@ -1,3 +1,5 @@
+from multipledispatch import dispatch
+
 class Vector:
   def __init__(self, values = None):
     self.__dim = 0
@@ -20,3 +22,19 @@ class Vector:
 
   def y(self):
     return self.__coordinates[1]
+  
+  # Operators:
+
+  # Multiply *=
+  @dispatch(int)
+  def __imul__(self, scalar):
+    print(self)
+    for i in range(self.__dim):
+      self.__coordinates[i] *= scalar
+    return self
+
+  @dispatch(float)
+  def __imul__(self, scalar):
+    for i in range(self.__dim):
+      self.__coordinates[i] *= scalar
+    return self
