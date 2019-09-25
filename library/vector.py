@@ -23,18 +23,80 @@ class Vector:
   def y(self):
     return self.__coordinates[1]
   
+  def copy(self):
+    c = Vector((self.__coordinates).copy())
+    return c
+
+
   # Operators:
 
-  # Multiply *=
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #                          MULTILPY                         #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+  # *= scalar:int
   @dispatch(int)
   def __imul__(self, scalar):
-    print(self)
     for i in range(self.__dim):
       self.__coordinates[i] *= scalar
     return self
 
+  # *= scalar:float
   @dispatch(float)
   def __imul__(self, scalar):
     for i in range(self.__dim):
       self.__coordinates[i] *= scalar
     return self
+
+  # * scalar:int
+  @dispatch(int)
+  def __mul__(self, scalar):
+    new_copy = self.copy()
+    for i in range(new_copy.__dim):
+      new_copy.__coordinates[i] *= scalar
+    return new_copy
+
+  # * scalar:float
+  @dispatch(float)
+  def __mul__(self, scalar):
+    new_copy = self.copy()
+    for i in range(new_copy.__dim):
+      new_copy.__coordinates[i] *= scalar
+    return new_copy
+
+
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #                           DIVIDE                          #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+  # /= scalar:int
+  @dispatch(int)
+  def __itruediv__(self, scalar):
+    new_copy = self.copy()
+    if scalar != 0:
+      new_copy *= 1/float(scalar)
+    return new_copy
+
+  # /= scalar:float
+  @dispatch(float)
+  def __itruediv__(self, scalar):
+    new_copy = self.copy()
+    if scalar != 0:
+      new_copy *= 1/float(scalar)
+    return new_copy
+
+  # / scalar:int
+  @dispatch(int)
+  def __truediv__(self, scalar):
+    new_copy = self.copy()
+    if scalar != 0:
+      new_copy *= 1/float(scalar)
+    return new_copy
+
+  # / scalar:float
+  @dispatch(float)
+  def __truediv__(self, scalar):
+    new_copy = self.copy()
+    if scalar != 0:
+      new_copy *= 1/float(scalar)
+    return new_copy

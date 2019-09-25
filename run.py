@@ -15,10 +15,9 @@ for i in range(points):
   v = Vector([x, f(x)])
   vs.append(v)
 
-
 Plotter().plot(vs)
 
 v = Vector([1,2])
-print(v)
-v *= 2.8
-print(v)
+v2 = v / 2
+v2 /= 2
+print(v2)
