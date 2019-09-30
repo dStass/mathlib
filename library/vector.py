@@ -27,6 +27,10 @@ class Vector:
   def z(self):
     return self.__coordinates[2]
 
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #                     VECTOR PROPERTIES                     #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
   def magnitude(self):
     total = 0
     for c in self.__coordinates:
@@ -41,8 +45,33 @@ class Vector:
       v.__coordinates[i] /= mag
     return v
 
+  # return acute angle between two vectors
+  # in degrees
+  def dtheta(self, v1, v2):
+    if v1.__dim != v2.__dim:
+      return None
+
+    dot = v1 * v2
+    mag1 = v1.magnitude()
+    mag2 = v2.magnitude()
+    if mag1 == 0 and mag2 == 0:
+      return 0
+    
+    dot_over_mags = dot/(mag1 * mag2)
+    rounded_dom = round(dot_over_mags, 10) # ie 1.000000
+    if rounded_dom == 1:
+      return 0
+    if rounded_dom == -1:
+      return 180
+  
+    angle_in_radians = math.acos(dot_over_mags)
+    angle_in_degrees = math.degrees(angle_in_radians)
+    if angle_in_degrees > 180:
+      angle_in_degrees = 360 - angle_in_degrees
+    return angle_in_degrees
+
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-  #                           HELPER                         #
+  #                           HELPER                          #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   
   def copy(self):
@@ -55,7 +84,7 @@ class Vector:
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-  #                          MULTILPY                         #
+  #                       MULTILPICATION                      #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
   # *= scalar:int
@@ -88,9 +117,19 @@ class Vector:
       new_copy.__coordinates[i] *= scalar
     return new_copy
 
+  @dispatch(object)
+  def __mul__(self, vector):
+    if self.__dim != vector.__dim:
+      return None
+    
+    prod = 0
+    for i in range(self.__dim):
+      prod += (self.__coordinates[i] * vector.__coordinates[i])
+    return prod
+
 
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-  #                           DIVIDE                          #
+  #                          DIVISION                         #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
   # /= scalar:int
@@ -124,8 +163,9 @@ class Vector:
       new_copy *= 1/float(scalar)
     return new_copy
 
+
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-  #                            PLUS                           #
+  #                         ADDITION                          #
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
   # += object:Vector

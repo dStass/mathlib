@@ -38,7 +38,7 @@ def f(x):
 
 p = Plotter()
 v1 = Vector([0,1])
-v2 = Vector([1,0])
+v2 = Vector([0,2])
 v3 = Vector([1,1]) * 3
 v4 = v3.unit()
 
@@ -46,6 +46,8 @@ p.add_arrow_vector(v1)
 p.add_arrow_vector(v2)
 p.add_arrow_vector(v3, 'g')
 p.add_arrow_vector(v4, 'r')
+
+print(Vector().dtheta(v1,v2))
 
 
 p.save()
