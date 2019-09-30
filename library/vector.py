@@ -1,4 +1,5 @@
 from multipledispatch import dispatch
+import math
 
 class Vector:
   def __init__(self, values = None):
@@ -25,6 +26,24 @@ class Vector:
   
   def z(self):
     return self.__coordinates[2]
+
+  def magnitude(self):
+    total = 0
+    for c in self.__coordinates:
+      total += c**2
+    return math.sqrt(total)
+
+  # return unit vector of self
+  def unit(self):
+    v = self.copy()
+    mag = self.magnitude()
+    for i in range(len(v.__coordinates)):
+      v.__coordinates[i] /= mag
+    return v
+
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #                           HELPER                         #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   
   def copy(self):
     c = Vector((self.__coordinates).copy())

@@ -1,11 +1,20 @@
 from multipledispatch import dispatch
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
 from library.vector import Vector
 
 class Plotter:
   PBUFFER = 0.1  # plot buffer
+  xrange = [0,0]
+  yrange = [0,0]
+  x_buf = 0
+  y_buf = 0
+
+  def Plotter(self):
+    pass
+
   def plot(self, points):
     extracted = self.extract_vectors_and_ranges(points)
     xs = extracted[0]
@@ -13,48 +22,44 @@ class Plotter:
     range_x = extracted[2]
     range_y = extracted[3]
 
-    x_buf = abs(range_x[1] - range_x[0]) * self.PBUFFER
-    y_buf = abs(range_y[1] - range_y[0]) * self.PBUFFER
+    self.update_xrange(range_x)
+    self.update_x_buf()
+    self.update_yrange(range_y)
+    self.update_y_buf()
 
     # resize canvas
-    plt.xlim(range_x[0] - x_buf , range_x[1] + x_buf)
-    plt.ylim(range_y[0] - y_buf , range_y[1] + y_buf)
+    self.resize()
 
     # draw origin axes
-    plt.axhline(y=0, color='k')
-    plt.axvline(x=0, color='k')
+    self.draw_axis()
     
     plt.plot(xs, ys, 'ro', marker='.')
 
-    
-    plt.savefig('plot.png')
-
-  def plot_vectors_from_origin(self, vectors):
+  def plot_vectors_from_origin(self, vectors, colour = 'k'):
     extracted = self.extract_vectors_and_ranges(vectors)
     xs = extracted[0]
     ys = extracted[1]
     range_x = extracted[2]
     range_y = extracted[3]
 
-    x_buf = abs(range_x[1] - range_x[0]) * self.PBUFFER
-    y_buf = abs(range_y[1] - range_y[0]) * self.PBUFFER
+    self.update_xrange(range_x)
+    self.update_x_buf()
+    self.update_yrange(range_y)
+    self.update_y_buf()
 
-    for i in range(len(xs)):
-      plt.annotate(s='', xy=(xs[i],ys[i]), xytext=(0,0), arrowprops=dict(arrowstyle='->'))
+    arrow_buff = self.get_arrow_buffer()
     
-     # resize canvas
-    plt.xlim(range_x[0] - x_buf , range_x[1] + x_buf)
-    plt.ylim(range_y[0] - y_buf , range_y[1] + y_buf)
+    # resize canvas
+    self.resize()
 
     # draw origin axes
-    plt.axhline(y=0, color='k')
-    plt.axvline(x=0, color='k')
-    
+    self.draw_axis()
 
-    plt.savefig('plot.png')
+    for i in range(len(xs)):
+      plt.arrow(0, 0, xs[i], ys[i],  head_width= self.PBUFFER * arrow_buff * 1.5,
+                                    head_length=self.PBUFFER * arrow_buff * 2.5,
+                                    color=colour)
 
-
-  # return [[xlo, xhi], [ylo, yhi]]
   def extract_vectors_and_ranges(self, vectors):
     range_x = [0,0]
     range_y = [0,0]
@@ -78,13 +83,69 @@ class Plotter:
       if y > range_y[1]:
         range_y[1] = y
     return [xs, ys, range_x, range_y]
-    
 
-
-  @dispatch(int, int)
-  def add(self, x, y):
-    print(x+y)
+  def update_xrange(self, range):
+    if range[0] < self.xrange[0]:
+      self.xrange[0] = range[0]
+    if range[1] > self.xrange[1]:
+      self.xrange[1] = range[1]
   
-  @dispatch(str, str)
-  def add(self, x, y):
-    print("STR")
+  def update_x_buf(self):
+    self.x_buf = abs(self.xrange[1] - self.xrange[0]) * self.PBUFFER
+  
+  def update_yrange(self, range):
+    if range[0] < self.yrange[0]:
+      self.yrange[0] = range[0]
+    if range[1] > self.yrange[1]:
+      self.yrange[1] = range[1]
+
+  def update_y_buf(self):
+    self.y_buf = abs(self.yrange[1] - self.yrange[0]) * self.PBUFFER
+
+
+  def resize(self):
+    plt.xlim(self.xrange[0] - self.x_buf , self.xrange[1] + self.x_buf)
+    plt.ylim(self.yrange[0] - self.y_buf , self.yrange[1] + self.y_buf)
+  
+  def draw_axis(self):
+    plt.axhline(y=0, color='k')
+    plt.axvline(x=0, color='k')
+
+  def add_arrow_vector(self, vector, colour = 'k'):
+    self.update_size_if_required(vector)
+    arrow_buff = self.get_arrow_buffer()
+    plt.arrow(0, 0, vector.x(), vector.y(),  head_width= self.PBUFFER * arrow_buff * 1.5,
+                                    head_length=self.PBUFFER * arrow_buff * 2.5,
+                                    color=colour)
+    
+  def get_arrow_buffer(self):
+    return math.sqrt(self.x_buf**2 + self.y_buf**2)
+
+  def update_size_if_required(self, vector):
+    change = False
+    x = vector.x()
+    y = vector.y()
+    if x < self.xrange[0]:
+      change = True
+      self.xrange[0] = x
+      self.update_x_buf()
+    if x > self.xrange[1]:
+      change = True
+      self.xrange[1] = x
+      self.update_x_buf()
+
+    if y < self.yrange[0]:
+      change = True
+      self.yrange[0] = y
+      self.update_y_buf()
+    
+    if y > self.yrange[1]:
+      change = True
+      self.yrange[1] = y
+      self.update_y_buf()
+
+    if change:
+      self.resize()  # TODO: FIX user warning
+
+  def save(self):
+    plt.savefig('plot.png')
