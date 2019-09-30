@@ -3,27 +3,27 @@ from library.plotter import Plotter
 import random
 import math
 
-points = 10000
+points = 100
 lo, hi = -20.0, 20.0
 
 def f(x):
-  return x**2*math.sin(x)/x*math.cos(x)
+  if x == 0:
+    return 0
+  return abs(1/x)
+
+# vs = []
+# for i in range(points):
+#   x = random.uniform(lo,hi)
+#   v = Vector([x, f(x)])
+#   vs.append(v)
+
+# Plotter().plot(vs)
 
 vs = []
 for i in range(points):
   x = random.uniform(lo,hi)
-  v = Vector([x, f(x)])
+  y = random.uniform(lo,hi)
+  v = Vector([x, y])
   vs.append(v)
 
-Plotter().plot(vs)
-
-v1 = Vector([1,0])
-v2 = Vector([0,1])
-
-v3 = Vector([1,1])
-
-v3 += (v2 * 2)
-v3 -= Vector([3,1])
-print(v1)
-print(v2)
-print(v3)
+Plotter().plot_vectors_from_origin(vs)
