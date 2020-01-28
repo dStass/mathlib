@@ -12,6 +12,8 @@ class Plotter:
   x_buf = 0
   y_buf = 0
 
+  arrows = []
+
   def Plotter(self):
     pass
 
@@ -35,30 +37,38 @@ class Plotter:
     
     plt.plot(xs, ys, 'ro', marker='.')
 
-  def plot_vectors_from_origin(self, vectors, colour = 'k'):
-    extracted = self.extract_vectors_and_ranges(vectors)
-    xs = extracted[0]
-    ys = extracted[1]
-    range_x = extracted[2]
-    range_y = extracted[3]
+  # def plot_vectors_from_origin(self, vectors, colour = 'k'):
+  #   extracted = self.extract_vectors_and_ranges(vectors)
+  #   xs = extracted[0]
+  #   ys = extracted[1]
+  #   range_x = extracted[2]
+  #   range_y = extracted[3]
 
-    self.update_xrange(range_x)
-    self.update_x_buf()
-    self.update_yrange(range_y)
-    self.update_y_buf()
+  #   self.update_xrange(range_x)
+  #   self.update_x_buf()
+  #   self.update_yrange(range_y)
+  #   self.update_y_buf()
 
-    arrow_buff = self.get_arrow_buffer()
+  #   arrow_buff = self.get_arrow_buffer()
     
-    # resize canvas
-    self.resize()
+  #   # resize canvas
+  #   self.resize()
 
-    # draw origin axes
-    self.draw_axis()
+  #   # draw origin axes
+  #   self.draw_axis()
 
-    for i in range(len(xs)):
-      plt.arrow(0, 0, xs[i], ys[i],  head_width= self.PBUFFER * arrow_buff * 1.5,
-                                    head_length=self.PBUFFER * arrow_buff * 2.5,
-                                    color=colour)
+  #   for i in range(len(xs)):
+  #     xi = xs[i]
+  #     yi = ys[i]
+  #     mag = math.sqrt(xi**2 + yi**2)
+  #     # plt.arrow(0, 0, xs[i], ys[i],  head_width= self.PBUFFER * arrow_buff * 1.5,
+  #     #                               head_length=self.PBUFFER * arrow_buff * 2.5,
+  #     #                               color=colour)
+  #     plt.arrow(0, 0, xi, yi, head_width= mag*0.005,
+  #                             head_length= mag * 0.001,
+  #                             color=colour)
+
+
 
   def extract_vectors_and_ranges(self, vectors):
     range_x = [0,0]
@@ -111,13 +121,38 @@ class Plotter:
     plt.axhline(y=0, color='k')
     plt.axvline(x=0, color='k')
 
-  def add_arrow_vector(self, vector, colour = 'k'):
+  def add_arrow_vector(self, vector, colour = 'k', from_vec = Vector([0,0])):
     self.update_size_if_required(vector)
     arrow_buff = self.get_arrow_buffer()
-    plt.arrow(0, 0, vector.x(), vector.y(),  head_width= self.PBUFFER * arrow_buff * 1.5,
-                                    head_length=self.PBUFFER * arrow_buff * 2.5,
-                                    color=colour)
+    self.arrows.append([from_vec, vector, colour])
     
+  
+  def draw(self):
+
+    arrow_buf = self.get_arrow_buffer()
+    for arrow in self.arrows:
+      arrow_from = arrow[0]
+      arrow_to = arrow[1]
+      arrow_colour = arrow[2]
+      print('aa', arrow_from, arrow_to, arrow_colour)
+      
+      arrow_from_x = arrow_from.x()
+      arrow_from_y = arrow_from.y()
+
+      arrow_to_x = arrow_to.x()
+      arrow_to_y = arrow_to.y()
+
+
+
+      plt.arrow(  arrow_from_x,
+                  arrow_from_y,
+                  arrow_to_x,
+                  arrow_to_y,
+                  head_width = arrow_buf*0.15,
+                  head_length = arrow_buf*0.3,
+                  color = arrow_colour,
+                  length_includes_head = True)
+
   def get_arrow_buffer(self):
     return math.sqrt(self.x_buf**2 + self.y_buf**2)
 
