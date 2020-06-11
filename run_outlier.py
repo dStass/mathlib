@@ -71,16 +71,31 @@ print("sum = ", y_sum)
 '''
 
 n = NormalDistribution()
+e = ExponentialDistribution()
+u = UniformDistribution()
+g = GammaDistribution()
+
+d = n
+
 eps = 0.0000005
 sample_size = 10000
 inc_spread = 100
-pdf_set = [(0, 1, 0.9), (-50, 3, 0.05), (35, 1, 0.05)]
+pdf_set = [(0.9, 0, 5), (0.05, -50, 3), (0.05, 35, 1)]
+# pdf_set = [(0.8, 0.5), (0.2, 1.5)]
+# pdf_set = [(0.8, 0, 2), (0.1, -30, -25), (0.1, 15, 20)]
+# pdf_set = [(0.5,3,0.5), (0.5, 2, 0.5)]
 
-real_points = [Vector([x,0]) for x in n.generate_weighted_pdfs(pdf_set, sample_size)]
+real_points = [Vector([x,0]) for x in d.generate_weighted_pdfs(pdf_set, sample_size)]
 
 # distribution points
-points = n.get_combined_weighted_pdf_plot_points(-75, 50, 1/inc_spread, pdf_set)
+points = d.get_combined_weighted_pdf_plot_points(-75, 50, 1/inc_spread, pdf_set)
 points = [Vector([p[0], p[1]]) for p in points if p[1] > eps]
 
 p.plot_data_sets([points, real_points], show=True)
 p.save("dist_outliers")
+
+y_sum = 0
+for p in points:
+  y_sum += p.y()
+y_sum/=inc_spread
+print("sum = ", y_sum)
