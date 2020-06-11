@@ -16,6 +16,9 @@ class Distribution:
   def get_random_variate(self, pdf_i):
     return None
 
+  def generate_pdf_set(self, weights):
+    return None
+
   def generate_weighted_pdfs(self, pdf_set, N = 10):
     '''
     pdf_set: list of tuples of length 3.
@@ -35,6 +38,7 @@ class Distribution:
 
     return dataset
 
+
   def get_combined_weighted_pdf_plot_points(self, _from, _to, _inc, pdf_set):
     '''
     pdf_set: list of lists of length 3.
@@ -48,6 +52,30 @@ class Distribution:
         y += self.evaluate_at(x, pdf_i)
       points.append((x,y))
     return points
+
+
+  def generate_data_with_outliers(self, mean = 10, outlier_amount = 0.05, outlier_left_skew = 0.5, outlier_skew_random = False, inc = 100, N = 100):
+    '''
+    generate a dataset with outliers
+    '''
+
+    if outlier_skew_random: outlier_left_skew = random.random()
+
+    standard_set_fraction = 1 - outlier_amount
+    outlier_left_fraction = outlier_left_skew * outlier_amount
+    outlier_right_fraction = outlier_amount - outlier_left_fraction
+
+    weights = [standard_set_fraction, outlier_left_fraction, outlier_right_fraction]
+    pdf_set = self.generate_pdf_set(weights, mean)
+
+    print(weights)
+
+    data = self.generate_weighted_pdfs(pdf_set, N)
+
+    plot_points = self.get_combined_weighted_pdf_plot_points(pdf_set[1][1]-10, pdf_set[2][1]+10, 1/inc, pdf_set)
+
+    return data, plot_points
+
 
   # def generate_random(self, size = 1000):
   #   # size_total = random.randint(500, 5000)
@@ -150,3 +178,13 @@ class NormalDistribution(Distribution):
     sigma_i = pdf_i[2]
     random_variate = random.normalvariate(mu_i, sigma_i)
     return random_variate
+  
+  def generate_pdf_set(self, weights, centre):
+    standard_set = (weights[0], centre, random.uniform(0.5, 2))
+    left_set = (weights[1], centre - centre * standard_set[2] * random.uniform(1, 3), random.uniform(0.5, 2))
+    right_set = (weights[2], centre + centre * standard_set[2] * random.uniform(1, 3), random.uniform(0.5, 2))
+    pdf_set = [standard_set, left_set, right_set]
+
+    if right_set[1] < left_set[1]: pdf_set = [standard_set, right_set, left_set]
+
+    return pdf_set

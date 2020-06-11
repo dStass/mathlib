@@ -78,24 +78,39 @@ g = GammaDistribution()
 d = n
 
 eps = 0.0000005
-sample_size = 10000
-inc_spread = 100
+sample_size = 5000
+inc_spread = 1000
 pdf_set = [(0.9, 0, 5), (0.05, -50, 3), (0.05, 35, 1)]
+
+data, points = d.generate_data_with_outliers(mean=100, outlier_amount=random.uniform(0, 0.15), outlier_left_skew=0.9, N = sample_size, inc = inc_spread, outlier_skew_random=True)
+real_points = [Vector([x,0]) for x in data]
+plot_points = [Vector([p[0], p[1]]) for p in points if p[1] > eps]
+
+y_sum = 0
+for y in plot_points:
+  y_sum += y.y()
+y_sum/=inc_spread
+print("sum = ", y_sum)
+
+p.plot_data_sets([plot_points, real_points], show=True)
+p.save("dist_outliers")
+
+
 # pdf_set = [(0.8, 0.5), (0.2, 1.5)]
 # pdf_set = [(0.8, 0, 2), (0.1, -30, -25), (0.1, 15, 20)]
 # pdf_set = [(0.5,3,0.5), (0.5, 2, 0.5)]
 
-real_points = [Vector([x,0]) for x in d.generate_weighted_pdfs(pdf_set, sample_size)]
+# real_points = [Vector([x,0]) for x in d.generate_weighted_pdfs(pdf_set, sample_size)]
 
 # distribution points
-points = d.get_combined_weighted_pdf_plot_points(-75, 50, 1/inc_spread, pdf_set)
-points = [Vector([p[0], p[1]]) for p in points if p[1] > eps]
+# points = d.get_combined_weighted_pdf_plot_points(-75, 50, 1/inc_spread, pdf_set)
+# points = [Vector([p[0], p[1]]) for p in points if p[1] > eps]
 
-p.plot_data_sets([points, real_points], show=True)
-p.save("dist_outliers")
+# p.plot_data_sets([points, real_points], show=True)
+# p.save("dist_outliers")
 
-y_sum = 0
-for p in points:
-  y_sum += p.y()
-y_sum/=inc_spread
-print("sum = ", y_sum)
+# y_sum = 0
+# for p in points:
+#   y_sum += p.y()
+# y_sum/=inc_spread
+# print("sum = ", y_sum)
