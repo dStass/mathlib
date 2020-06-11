@@ -7,10 +7,10 @@ from library.vector import Vector
 from library.plotter import Plotter
 
 
-# vs = Function().plot_points(fr=-10, to=math.pi*20, name='sin', values=5000)
+vs = Function().plot_points(fr=-10, to=math.pi*20, name='sin', values=5000)
 
-# p = Plotter()
-# p.plot(vs)
+p = Plotter()
+p.plot(vs, show=True)
 
 
 # p = Plotter()
@@ -26,19 +26,20 @@ from library.plotter import Plotter
 
 
 
-p = Plotter()
-v1 = Vector([1,1])
-v2 = Vector([0,1]) + v1 * 10
-v3 = v1 * 30
-v4 = v3.unit()
+# p = Plotter()
+# v1 = Vector([1,1])
+# v2 = Vector([0,1]) + v1 * 10
+# v3 = v1 * 30
+# v4 = v3.unit()
 
-p.add_arrow_vector(v1)
-p.add_arrow_vector(v2)
-p.add_arrow_vector(v3, 'g')
-p.add_arrow_vector(v4, 'r')
+# p.add_arrow_vector(v1)
+# p.add_arrow_vector(v2)
+# p.add_arrow_vector(v3, 'g')
+# p.add_arrow_vector(v4, 'r')
 
-# print(Vector().dtheta(v1,v2))
 
-p.draw()
-p.save()
-os.system('cmd.exe /C start plot.png')
+# # print(Vector().dtheta(v1,v2))
+
+# p.draw()
+# p.save()
+# # os.system('cmd.exe /C start plot.png')

@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import math
 
 from library.vector import Vector
+import random
 
 class Plotter:
   PBUFFER = 0.1  # plot buffer
@@ -17,7 +18,7 @@ class Plotter:
   def Plotter(self):
     pass
 
-  def plot(self, points):
+  def plot(self, points, show = False):
     extracted = self.extract_vectors_and_ranges(points)
     xs = extracted[0]
     ys = extracted[1]
@@ -36,6 +37,50 @@ class Plotter:
     self.draw_axis()
     
     plt.plot(xs, ys, 'ro', marker='.')
+
+    if show: plt.show()
+
+  def plot_data_sets(self, point_sets, show = False):
+    '''
+    Plot a range of points
+    '''
+
+    colours = ['r','b', 'k', 'c', 'm', 'y', 'g', 'w']
+    # random.shuffle(colours)
+
+    all_xs = []
+    all_ys = []
+
+    for points in point_sets:
+      extracted = self.extract_vectors_and_ranges(points)
+      xs = extracted[0]
+      ys = extracted[1]
+      range_x = extracted[2]
+      range_y = extracted[3]
+
+      self.update_xrange(range_x)
+      self.update_x_buf()
+      self.update_yrange(range_y)
+      self.update_y_buf()
+
+      # resize canvas
+      self.resize()
+
+      # draw origin axes
+      self.draw_axis()
+
+      all_xs.append(xs)
+      all_ys.append(ys)
+    
+
+    # draw points
+    colour_index = 0
+    for xs, ys in zip(all_xs, all_ys):
+      plt.scatter(xs, ys, color=colours[colour_index], linewidths=0.4)
+      colour_index += 1
+      colour_index %= len(colours)
+
+    if show: plt.show()
 
   # def plot_vectors_from_origin(self, vectors, colour = 'k'):
   #   extracted = self.extract_vectors_and_ranges(vectors)
@@ -134,7 +179,6 @@ class Plotter:
       arrow_from = arrow[0]
       arrow_to = arrow[1]
       arrow_colour = arrow[2]
-      print('aa', arrow_from, arrow_to, arrow_colour)
       
       arrow_from_x = arrow_from.x()
       arrow_from_y = arrow_from.y()
@@ -182,5 +226,6 @@ class Plotter:
     if change:
       self.resize()  # TODO: FIX user warning
 
-  def save(self):
-    plt.savefig('plot.png')
+  def save(self, file_name = 'plot', path = ''):
+    EXT = '.png'
+    plt.savefig(file_name + EXT, format='png', dpi=1200)
