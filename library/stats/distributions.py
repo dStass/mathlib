@@ -6,8 +6,10 @@ from scipy import stats
 
 class Distribution:
   OUTLIER_DEVIATION_CUTOFF = 2
+  DRAW_DEVIATION_AMOUNT = 16
+  MIN_DEVIATION_FROM_TRUE_SET = 20
   MAX_INT = 2 ** 31 - 1
-  EPS = 0.000005
+  EPS = 0.00000000000000000005
 
   def generate_with_outliers(self, arg0 = 1, arg1 = 0, N = 10):
     return self.generate(arg0, arg1, N)
@@ -23,12 +25,20 @@ class Distribution:
 
   def num_deviations_from_average(self, value, pdf_i):
     return None
+
+  def get_extreme_density_plot_points(self, pdf_i):
+    return None
   
-  def extract_rand_range_int(self, _range):
+  def extract_range_int(self, _range):
     if len(_range) == 1: return _range[0]
     else: return random.randint(_range[0], _range[1])
 
-  def extract_rand_range_uniform(self, _range):
+  def extract_range(self, _range):
+    '''
+    If _range contains 1 item, we simply return it.
+    Otherwise, we return return a random float between
+    the first and second element of _range
+    '''
     if len(_range) == 1: return _range[0]
     else: return random.uniform(_range[0], _range[1])
 
@@ -53,40 +63,69 @@ class Distribution:
     return dataset
 
 
-  def get_combined_weighted_pdf_plot_points(self, _from, _to, _inc, pdf_set):
+  def get_combined_weighted_pdf_plot_points(self, _inc, pdf_set):
     '''
+
+    Normal case:
     pdf_set: list of lists of length 3.
     where the ith list contains (mu_i, sigma_i, weight_i)
     condition: sum of all weight_i = 1
     '''
-    points = []
+    points = {}
+    round_amount = len(str(_inc)[2:])
+    for pdf_i in pdf_set:
+      extremes = self.get_extreme_density_plot_points(pdf_i)
+      lo, hi = extremes
+      lo = round(lo, round_amount)
+      hi = round(hi, round_amount)
+      for x in np.arange(lo, int(hi + _inc/2.0), _inc):
+        x = round(x, round_amount)
+        y = self.evaluate_at(x, pdf_i)
+        if x not in points: points[x] = 0
+        points[x] += y
+    
+    to_return = [(x, points[x]) for x in points if points[x] > self.EPS]
+    return to_return
 
-    for x in np.arange(_from, int(_to + _inc/2.0), _inc):
-      y = 0
-      for pdf_i in pdf_set:
-        y += self.evaluate_at(x, pdf_i)
-      if y > self.EPS: points.append((x,y))
-    return points
 
-
-  def generate_data_with_outliers(self, mean = [10], outlier_amount = [0.05], outlier_left_skew = [0.5], inc = 100, N = [100]):
+  def generate_data_with_outliers(self, mean = [10], outlier_amount = [0.05], outlier_first_skew = [0.5], inc = 100, N = [100], num_outlier_sources = [2]):
     '''
     generate a dataset with outliers
+
+    num_outlier_sources: total number of different randomised outlier distributions
+    all elements will sum to outlier_amount * N 
     '''
-    mean = self.extract_rand_range_uniform(mean)
-    outlier_amount = self.extract_rand_range_uniform(outlier_amount)
-    outlier_left_skew = self.extract_rand_range_uniform(outlier_left_skew)
-    N = self.extract_rand_range_uniform(N)
+    mean = self.extract_range(mean)
+    outlier_amount = self.extract_range(outlier_amount)
+    outlier_first_skew = self.extract_range(outlier_first_skew)
+    N = self.extract_range(N)
+
+    num_outlier_sources = self.extract_range_int(num_outlier_sources)
 
 
     standard_set_fraction = 1 - outlier_amount
-    outlier_left_fraction = outlier_left_skew * outlier_amount
-    outlier_right_fraction = outlier_amount - outlier_left_fraction
+    outlier_first_fraction = outlier_first_skew * outlier_amount
+    weights = [standard_set_fraction, outlier_first_fraction]
 
-    weights = [standard_set_fraction, outlier_left_fraction, outlier_right_fraction]
+    outlier_left_over = outlier_amount - outlier_first_fraction
+    left_over_weights = np.random.random(size = num_outlier_sources - 1)
+    left_over_weights /= left_over_weights.sum()
+    left_over_weights *= outlier_left_over
+    left_over_weights = left_over_weights.tolist()
+
+    outlier_fraction_sum = outlier_first_fraction
+
+    for index, weight in enumerate(left_over_weights):
+      outlier_fraction_sum += weight
+      weights.append(weight)
+    
+    weights[-1] += outlier_amount - outlier_fraction_sum
+
     pdf_set = self.generate_pdf_set(weights, mean)
+    print('weights', weights)
 
     data = self.generate_weighted_pdfs(pdf_set, N)
+
     # data = [(d, 0) for d in data]
     # plot_points = self.get_combined_weighted_pdf_plot_points(pdf_set[1][1]-10, pdf_set[2][1]+10, 1/inc, pdf_set)
 
@@ -200,12 +239,18 @@ class NormalDistribution(Distribution):
       if self.within_acceptable_deviation(random_variate, pdf_i): return random_variate
   
   def generate_pdf_set(self, weights, centre):
-    standard_set = (weights[0], centre, random.uniform(0.5, 2))
-    left_set = (weights[1], centre - centre * standard_set[2] * random.uniform(1, 3), random.uniform(0.5, 2))
-    right_set = (weights[2], centre + centre * standard_set[2] * random.uniform(1, 3), random.uniform(0.5, 2))
-    pdf_set = [standard_set, left_set, right_set]
+    pdf_set = []
+    true_set = (weights[0], centre, random.uniform(0.5, 3))
+    pdf_set.append(true_set)
+    for weight in weights[1:]:
+      positive_negative_factor = 1 if random.random() < 0.5 else -1
 
-    if right_set[1] < left_set[1]: pdf_set = [standard_set, right_set, left_set]
+      # ensure the mean of these sets do not exist within 20 s.d. of standard data
+      while True:
+        curr_set = (weight, centre + positive_negative_factor * centre * true_set[2] * random.uniform(2, 10), random.uniform(0.5, 3))
+        if abs((curr_set[1] - true_set[1])/true_set[2]) > self.MIN_DEVIATION_FROM_TRUE_SET:
+          pdf_set.append(curr_set)
+          break
 
     return pdf_set
   
@@ -215,3 +260,14 @@ class NormalDistribution(Distribution):
     num_deviations = abs(value - mu_i) / sigma_i
     if num_deviations < self.OUTLIER_DEVIATION_CUTOFF: return True
     else: return False
+
+  def get_extreme_density_plot_points(self, pdf_i):
+    '''
+    return extreme points we need to plot
+    '''
+    mu_i = pdf_i[1]
+    sigma_i = pdf_i[2]
+
+    min_range = mu_i - self.DRAW_DEVIATION_AMOUNT
+    max_range = mu_i + self.DRAW_DEVIATION_AMOUNT
+    return (min_range, max_range)
