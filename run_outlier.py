@@ -88,18 +88,8 @@ data, pdf_set = d.generate_data_with_outliers(
   outlier_left_skew=[0.99],
   N = [sample_size],
   inc = inc_spread)
-# real_points = [Vector([x,0]) for x in data]
-# plot_points = [Vector([p[0], p[1]]) for p in points if p[1] > eps]
 
-# y_sum = 0
-# for y in points:
-#   y_sum += y[1]
-# y_sum/=inc_spread
-# print("sum = ", y_sum)
-# xs  = list(range(len(data)))
-# random.shuffle(xs)
 
-# data = [(d[0], d[1]) for d in zip(xs, data)]
 data.sort()
 data = [(d, 0) for d in data]
 buffer = 0.2*max(abs(data[0][0]), abs(data[-1][0]))
@@ -113,17 +103,3 @@ print("sum = ", y_sum)
 
 p.plot_data_sets([data, distribution_curve], show=True)
 p.save("dist_outliers")
-
-
-# pdf_set = [(0.8, 0.5), (0.2, 1.5)]
-# pdf_set = [(0.8, 0, 2), (0.1, -30, -25), (0.1, 15, 20)]
-# pdf_set = [(0.5,3,0.5), (0.5, 2, 0.5)]
-
-# real_points = [Vector([x,0]) for x in d.generate_weighted_pdfs(pdf_set, sample_size)]
-
-# distribution points
-# points = d.get_combined_weighted_pdf_plot_points(-75, 50, 1/inc_spread, pdf_set)
-# points = [Vector([p[0], p[1]]) for p in points if p[1] > eps]
-
-# p.plot_data_sets([points, real_points], show=True)
-# p.save("dist_outliers")
