@@ -45,7 +45,7 @@ class Plotter:
     Plot a range of points
     '''
 
-    colours = ['r','b', 'k', 'c', 'm', 'y', 'g', 'w']
+    colours = ['r','b', 'y', 'c', 'm', 'k', 'g', 'w']
     # random.shuffle(colours)
 
     all_xs = []

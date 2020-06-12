@@ -1,6 +1,7 @@
 from library.stats.distributions import *
+from library.stats.outlier_detection import OutlierDetection
 from library.plotter import Plotter
-from library.vector import Vector
+
 
 # e = ExponentialDistribution()
 # g = GammaDistribution()
@@ -77,21 +78,27 @@ g = GammaDistribution()
 
 d = n
 
-sample_size = 10000
+sample_size = 2500
 granurality = 100
 # pdf_set = [(0.9, 0, 5), (0.05, -50, 3), (0.05, 35, 1)]
 
 data, pdf_set = d.generate_data_with_outliers(
   mean=[120, 500],
-  outlier_amount=[0.05, 0.20],
-  outlier_first_skew=[0.4],
-  num_outlier_sources = [20],
+  outlier_amount=[0.20],
+  num_outlier_sources = [15,20],
   N = [sample_size])
 
+o = OutlierDetection()
+cleaned_data = o.remove_outliers(np.array(data), "MAD")
 
-data.sort()
-data = [(d, 0) for d in data]
-buffer = 0.2*max(abs(data[0][0]), abs(data[-1][0]))
+# data = [(d, 0) for d in data]
+
+cleaned_set = set(cleaned_data)
+
+removed_points = [(d, 0) for d in data if d not in cleaned_set]
+
+cleaned_data = [(d,0) for d in cleaned_data]
+
 distribution_curve = d.get_combined_weighted_pdf_plot_points(1/granurality, pdf_set)
 
 y_sum = 0
@@ -100,5 +107,5 @@ for point in distribution_curve:
 y_sum/=granurality
 print("sum = ", y_sum)
 
-p.plot_data_sets([data, distribution_curve], show=True)
+p.plot_data_sets([cleaned_data, distribution_curve, removed_points], show=True)
 p.save("dist_outliers")

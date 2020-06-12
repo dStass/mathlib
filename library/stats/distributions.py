@@ -7,9 +7,14 @@ from scipy import stats
 class Distribution:
   OUTLIER_DEVIATION_CUTOFF = 2
   DRAW_DEVIATION_AMOUNT = 16
-  MIN_DEVIATION_FROM_TRUE_SET = 20
   MAX_INT = 2 ** 31 - 1
   EPS = 0.00000000000000000005
+
+  OUTLIER_DEVIATION_RANGE = (0.5, 10)
+  NON_OUTLIER_DEVIATION_RANGE = (1, 3)
+
+  # s.d. other distributions should be from non-outlier set
+  MIN_DEVIATION_FROM_TRUE_SET = 150
 
   def generate_with_outliers(self, arg0 = 1, arg1 = 0, N = 10):
     return self.generate(arg0, arg1, N)
@@ -88,7 +93,7 @@ class Distribution:
     return to_return
 
 
-  def generate_data_with_outliers(self, mean = [10], outlier_amount = [0.05], outlier_first_skew = [0.5], inc = 100, N = [100], num_outlier_sources = [2]):
+  def generate_data_with_outliers(self, mean = [10], outlier_amount = [0.05], outlier_first_skew = None, inc = 100, N = [100], num_outlier_sources = [2]):
     '''
     generate a dataset with outliers
 
@@ -97,14 +102,18 @@ class Distribution:
     '''
     mean = self.extract_range(mean)
     outlier_amount = self.extract_range(outlier_amount)
-    outlier_first_skew = self.extract_range(outlier_first_skew)
+    
     N = self.extract_range(N)
 
     num_outlier_sources = self.extract_range_int(num_outlier_sources)
 
+    if outlier_first_skew:
+      outlier_first_skew = self.extract_range(outlier_first_skew)
+      outlier_first_fraction = outlier_first_skew * outlier_amount
+    else:
+      outlier_first_fraction = random.uniform(0.0,1.0) * outlier_amount
 
     standard_set_fraction = 1 - outlier_amount
-    outlier_first_fraction = outlier_first_skew * outlier_amount
     weights = [standard_set_fraction, outlier_first_fraction]
 
     outlier_left_over = outlier_amount - outlier_first_fraction
@@ -240,14 +249,14 @@ class NormalDistribution(Distribution):
   
   def generate_pdf_set(self, weights, centre):
     pdf_set = []
-    true_set = (weights[0], centre, random.uniform(0.5, 3))
+    true_set = (weights[0], centre, random.uniform(self.NON_OUTLIER_DEVIATION_RANGE[0], self.NON_OUTLIER_DEVIATION_RANGE[1]))
     pdf_set.append(true_set)
     for weight in weights[1:]:
       positive_negative_factor = 1 if random.random() < 0.5 else -1
 
       # ensure the mean of these sets do not exist within 20 s.d. of standard data
       while True:
-        curr_set = (weight, centre + positive_negative_factor * centre * true_set[2] * random.uniform(2, 10), random.uniform(0.5, 3))
+        curr_set = (weight, centre + positive_negative_factor * centre * true_set[2] * random.uniform(2, 10), random.uniform(self.OUTLIER_DEVIATION_RANGE[0], self.OUTLIER_DEVIATION_RANGE[1]))
         if abs((curr_set[1] - true_set[1])/true_set[2]) > self.MIN_DEVIATION_FROM_TRUE_SET:
           pdf_set.append(curr_set)
           break
@@ -268,6 +277,6 @@ class NormalDistribution(Distribution):
     mu_i = pdf_i[1]
     sigma_i = pdf_i[2]
 
-    min_range = mu_i - self.DRAW_DEVIATION_AMOUNT
-    max_range = mu_i + self.DRAW_DEVIATION_AMOUNT
+    min_range = mu_i - (self.DRAW_DEVIATION_AMOUNT + self.DRAW_DEVIATION_AMOUNT*sigma_i)
+    max_range = mu_i + (self.DRAW_DEVIATION_AMOUNT + self.DRAW_DEVIATION_AMOUNT*sigma_i)
     return (min_range, max_range)

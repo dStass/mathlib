@@ -308,11 +308,11 @@ class OutlierDetection:
 
 
 
-o = OutlierDetection()
-trials = 1000
-for i in range(500, 10001, 500):
-  print("Size =", i)
-  o.run_and_write_to_csv(SAMPLE_SIZE=i)
+# o = OutlierDetection()
+# trials = 1000
+# for i in range(500, 10001, 500):
+#   print("Size =", i)
+#   o.run_and_write_to_csv(SAMPLE_SIZE=i)
 
 
 
