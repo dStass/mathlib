@@ -134,7 +134,6 @@ class Plotter:
       arrow_from = arrow[0]
       arrow_to = arrow[1]
       arrow_colour = arrow[2]
-      print('aa', arrow_from, arrow_to, arrow_colour)
       
       arrow_from_x = arrow_from.x()
       arrow_from_y = arrow_from.y()
