@@ -79,20 +79,20 @@ d = n
 
 eps = 0.0000005
 sample_size = 5000
-inc_spread = 1000
+inc_spread = 100
 pdf_set = [(0.9, 0, 5), (0.05, -50, 3), (0.05, 35, 1)]
 
-data, points = d.generate_data_with_outliers(mean=100, outlier_amount=random.uniform(0, 0.15), outlier_left_skew=0.9, N = sample_size, inc = inc_spread, outlier_skew_random=True)
-real_points = [Vector([x,0]) for x in data]
-plot_points = [Vector([p[0], p[1]]) for p in points if p[1] > eps]
+data, points = d.generate_data_with_outliers(mean=100, outlier_amount=random.uniform(0.05, 0.20), outlier_left_skew=0.9, N = sample_size, inc = inc_spread, outlier_skew_random=True)
+# real_points = [Vector([x,0]) for x in data]
+# plot_points = [Vector([p[0], p[1]]) for p in points if p[1] > eps]
 
 y_sum = 0
-for y in plot_points:
-  y_sum += y.y()
+for y in points:
+  y_sum += y[1]
 y_sum/=inc_spread
 print("sum = ", y_sum)
 
-p.plot_data_sets([plot_points, real_points], show=True)
+p.plot_data_sets([data, points], show=True)
 p.save("dist_outliers")
 
 

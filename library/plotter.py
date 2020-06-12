@@ -55,19 +55,19 @@ class Plotter:
       extracted = self.extract_vectors_and_ranges(points)
       xs = extracted[0]
       ys = extracted[1]
-      range_x = extracted[2]
-      range_y = extracted[3]
+      # range_x = extracted[2]
+      # range_y = extracted[3]
 
-      self.update_xrange(range_x)
-      self.update_x_buf()
-      self.update_yrange(range_y)
-      self.update_y_buf()
+      # self.update_xrange(range_x)
+      # self.update_x_buf()
+      # self.update_yrange(range_y)
+      # self.update_y_buf()
 
-      # resize canvas
-      self.resize()
+      # # resize canvas
+      # self.resize()
 
-      # draw origin axes
-      self.draw_axis()
+      # # draw origin axes
+      # self.draw_axis()
 
       all_xs.append(xs)
       all_ys.append(ys)
@@ -122,8 +122,8 @@ class Plotter:
     xs = []
     ys = []
     for i in range(len(vectors)):
-      x = vectors[i].x()
-      y = vectors[i].y()
+      x = vectors[i][0]
+      y = vectors[i][1]
       xs.append(x)
       ys.append(y)
 

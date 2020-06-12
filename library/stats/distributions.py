@@ -5,7 +5,9 @@ import numpy as np
 from scipy import stats
 
 class Distribution:
+  OUTLIER_DEVIATION_CUTOFF = 0.5
   MAX_INT = 2 ** 31 - 1
+  EPS = 0.000005
 
   def generate_with_outliers(self, arg0 = 1, arg1 = 0, N = 10):
     return self.generate(arg0, arg1, N)
@@ -19,6 +21,9 @@ class Distribution:
   def generate_pdf_set(self, weights):
     return None
 
+  def num_deviations_from_average(self, value, pdf_i):
+    return None
+
   def generate_weighted_pdfs(self, pdf_set, N = 10):
     '''
     pdf_set: list of tuples of length 3.
@@ -30,11 +35,12 @@ class Distribution:
       weight_i = pdf_i[0]
       num_values_pdf_i = int(weight_i * N)
       for i in range(num_values_pdf_i):
-        dataset.append(self.get_random_variate(pdf_i))
+        random_variate = self.get_random_variate(pdf_i, self.OUTLIER_DEVIATION_CUTOFF)
+        dataset.append(random_variate)
 
     # ensure dataset has length N
     while len(dataset) > N: dataset.pop()
-    while len(dataset) < N: dataset.append(self.get_random_variate(pdf_i))
+    while len(dataset) < N: dataset.append(self.get_random_variate(pdf_i, self.OUTLIER_DEVIATION_CUTOFF))
 
     return dataset
 
@@ -46,11 +52,12 @@ class Distribution:
     condition: sum of all weight_i = 1
     '''
     points = []
+
     for x in np.arange(_from, int(_to + _inc/2.0), _inc):
       y = 0
       for pdf_i in pdf_set:
         y += self.evaluate_at(x, pdf_i)
-      points.append((x,y))
+      if y > self.EPS: points.append((x,y))
     return points
 
 
@@ -68,13 +75,11 @@ class Distribution:
     weights = [standard_set_fraction, outlier_left_fraction, outlier_right_fraction]
     pdf_set = self.generate_pdf_set(weights, mean)
 
-    print(weights)
-
     data = self.generate_weighted_pdfs(pdf_set, N)
+    # data = [(d, 0) for d in data]
+    # plot_points = self.get_combined_weighted_pdf_plot_points(pdf_set[1][1]-10, pdf_set[2][1]+10, 1/inc, pdf_set)
 
-    plot_points = self.get_combined_weighted_pdf_plot_points(pdf_set[1][1]-10, pdf_set[2][1]+10, 1/inc, pdf_set)
-
-    return data, plot_points
+    return data, weights
 
 
   # def generate_random(self, size = 1000):
@@ -134,6 +139,8 @@ class ExponentialDistribution(Distribution):
     random_variate = random.expovariate(lambda_i)
     return random_variate
 
+  # https://math.stackexchange.com/questions/741118/standard-deviation-with-exponential-distribution
+
 
 class GammaDistribution(Distribution):
   def evaluate_at(self, x, pdf_i):
@@ -173,11 +180,13 @@ class NormalDistribution(Distribution):
     y = weight_i * (1/(sigma_i * math.sqrt(2*math.pi))) * math.exp(-(((x-mu_i)**2)/(2*sigma_i**2)))
     return y
 
-  def get_random_variate(self, pdf_i):
+  def get_random_variate(self, pdf_i, max_deviation = None):
     mu_i = pdf_i[1]
     sigma_i = pdf_i[2]
-    random_variate = random.normalvariate(mu_i, sigma_i)
-    return random_variate
+    if not max_deviation: return random.normalvariate(mu_i, sigma_i)
+    while True:
+      random_variate = random.normalvariate(mu_i, sigma_i)
+      if self.within_acceptable_deviation(random_variate, pdf_i): return random_variate
   
   def generate_pdf_set(self, weights, centre):
     standard_set = (weights[0], centre, random.uniform(0.5, 2))
@@ -188,3 +197,10 @@ class NormalDistribution(Distribution):
     if right_set[1] < left_set[1]: pdf_set = [standard_set, right_set, left_set]
 
     return pdf_set
+  
+  def within_acceptable_deviation(self, value, pdf_i):
+    mu_i = pdf_i[1]
+    sigma_i = pdf_i[2]
+    num_deviations = abs(value - mu_i) / sigma_i
+    if num_deviations < self.OUTLIER_DEVIATION_CUTOFF: return True
+    else: return False
