@@ -5,7 +5,7 @@ import numpy as np
 from scipy import stats
 
 class Distribution:
-  OUTLIER_DEVIATION_CUTOFF = 0.5
+  OUTLIER_DEVIATION_CUTOFF = 2
   MAX_INT = 2 ** 31 - 1
   EPS = 0.000005
 
@@ -23,6 +23,14 @@ class Distribution:
 
   def num_deviations_from_average(self, value, pdf_i):
     return None
+  
+  def extract_rand_range_int(self, _range):
+    if len(_range) == 1: return _range[0]
+    else: return random.randint(_range[0], _range[1])
+
+  def extract_rand_range_uniform(self, _range):
+    if len(_range) == 1: return _range[0]
+    else: return random.uniform(_range[0], _range[1])
 
   def generate_weighted_pdfs(self, pdf_set, N = 10):
     '''
@@ -61,12 +69,15 @@ class Distribution:
     return points
 
 
-  def generate_data_with_outliers(self, mean = 10, outlier_amount = 0.05, outlier_left_skew = 0.5, outlier_skew_random = False, inc = 100, N = 100):
+  def generate_data_with_outliers(self, mean = [10], outlier_amount = [0.05], outlier_left_skew = [0.5], inc = 100, N = [100]):
     '''
     generate a dataset with outliers
     '''
+    mean = self.extract_rand_range_uniform(mean)
+    outlier_amount = self.extract_rand_range_uniform(outlier_amount)
+    outlier_left_skew = self.extract_rand_range_uniform(outlier_left_skew)
+    N = self.extract_rand_range_uniform(N)
 
-    if outlier_skew_random: outlier_left_skew = random.random()
 
     standard_set_fraction = 1 - outlier_amount
     outlier_left_fraction = outlier_left_skew * outlier_amount
@@ -79,7 +90,7 @@ class Distribution:
     # data = [(d, 0) for d in data]
     # plot_points = self.get_combined_weighted_pdf_plot_points(pdf_set[1][1]-10, pdf_set[2][1]+10, 1/inc, pdf_set)
 
-    return data, weights
+    return data, pdf_set
 
 
   # def generate_random(self, size = 1000):
