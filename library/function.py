@@ -10,16 +10,16 @@ class Function:
     'sin'
   ]
 
-  def cubic(x):
+  def cubic(self, x):
     return float(x**3)
 
-  def square(x):
+  def square(self, x):
     return float(x**2)
   
-  def sin(x):
+  def sin(self, x):
     return math.sin(x)
 
-  def cos(x):
+  def cos(self, x):
     return math.cos(x)
 
 
@@ -30,12 +30,12 @@ class Function:
 
 
     # default cubic function
-    f = self.cubic
+    # f = self.cubic
 
     # check if given name exists and if so, let f be function
     if name in self.EQUATIONS:
       f = getattr(Function, name)  # returns the function 
       
     for i in points:
-      vs.append(Vector([i, f(i)]))
+      vs.append(Vector([i, f(0, i)]))
     return vs

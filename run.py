@@ -6,30 +6,40 @@ from library.function import Function
 from library.vector import Vector
 from library.plotter import Plotter
 
-VECS = 5
+
+vs = Function().plot_points(fr=-10, to=math.pi*20, name='sin', values=5000)
 
 p = Plotter()
-
-vs = []
-for i in range(VECS):
-  if i == VECS-1:
-    v = Vector([0,0])
-    for j in range(VECS-1):
-      vj = vs[j]
-      v += vj
-    vs.append(v/VECS)
-  else:
-    vs.append(Vector([random.uniform(0,5), random.uniform(-5,5)]))
+p.plot(vs, show=True)
 
 
-colours = ['b', 'g', 'k', 'y', 'm', 'c']
-for i, v in enumerate(vs):
-  colour = 'k'
-  if i == len(vs) - 1:
-    colour = 'r'
-  p.add_arrow_vector(v, colour)
+# p = Plotter()
+# for c in range(2):
+#   vs = Function().plot_points(fr=-10, to=math.pi*20, name='sin', values=50)
+
+#   colour = 'k'
+#   if c == 0:
+#     colour = 'k'
+#   else:
+#     colour = 'r'
+#   p.plot_vectors_from_origin(vs, colour)
 
 
-p.draw()
-p.save()
-os.system('cmd.exe /C start plot.png')
+
+# p = Plotter()
+# v1 = Vector([1,1])
+# v2 = Vector([0,1]) + v1 * 10
+# v3 = v1 * 30
+# v4 = v3.unit()
+
+# p.add_arrow_vector(v1)
+# p.add_arrow_vector(v2)
+# p.add_arrow_vector(v3, 'g')
+# p.add_arrow_vector(v4, 'r')
+
+
+# # print(Vector().dtheta(v1,v2))
+
+# p.draw()
+# p.save()
+# # os.system('cmd.exe /C start plot.png')
