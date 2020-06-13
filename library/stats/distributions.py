@@ -5,7 +5,7 @@ import numpy as np
 from scipy import stats
 
 class Distribution:
-  OUTLIER_DEVIATION_CUTOFF = 2
+  OUTLIER_DEVIATION_CUTOFF = 5
   DRAW_DEVIATION_AMOUNT = 16
   MAX_INT = 2 ** 31 - 1
   EPS = 0.00000000000000000005
