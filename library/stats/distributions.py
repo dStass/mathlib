@@ -225,7 +225,6 @@ class NormalDistribution(Distribution):
         else:
           max_deviation_from_true_set = (curr_set[1] - abs(curr_set[2]) * self.OUTLIER_DEVIATION_CUTOFF) - (true_set[1] + abs(true_set[1]) * self.OUTLIER_DEVIATION_CUTOFF)
         
-        
         if abs(max_deviation_from_true_set) > self.MIN_DEVIATION_FROM_TRUE_SET:
           pdf_set.append(curr_set)
           break

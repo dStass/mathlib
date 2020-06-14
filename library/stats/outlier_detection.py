@@ -71,14 +71,16 @@ class OutlierDetection:
 
 
   def remove_outliers(self, values_np, method):
-    sorted_values = np.sort(values_np)
-    sorted_values = sorted_values.tolist()
+    values = values_np.tolist()
+    sorted_values = sorted(values)
+    # sorted_values = np.sort(values_np)
+    # sorted_values = sorted_values.tolist()
 
     if method == "MAD":
       # MAD outlier detection method
       # https://en.wikipedia.org/wiki/Median_absolute_deviation
 
-      median = np.median(sorted_values)
+      median = self.median(sorted_values)
       sorted_values = self.remove_outliers_mad_method(sorted_values, median)
 
     elif method == "MEAN":
@@ -96,14 +98,14 @@ class OutlierDetection:
 
     elif method == "MEDIAN":
       # Same as MEAN method using
-      median = statistics.median(sorted_values)
+      median = self.median(sorted_values)
       std_dev = self.get_std_deviation(sorted_values, median)
       sorted_values = self.remove_outliers_deviation_method(sorted_values, median, std_dev)
 
     elif method == "MEDIAN_MODIFIED":
       # Same as MEAN method using
       sorted_values_removed_ends = self.remove_outliers_percentile_method(sorted_values, 0.05)
-      median = statistics.median(sorted_values_removed_ends)
+      median = self.median(sorted_values_removed_ends)
       std_dev = self.get_std_deviation(sorted_values_removed_ends, median)
       sorted_values = self.remove_outliers_deviation_method(sorted_values, median, std_dev)
 
@@ -156,7 +158,8 @@ class OutlierDetection:
     MAD = []
     for v in values:
       MAD.append(abs(v - median))
-    MAD = statistics.median(MAD)
+    MAD.sort()
+    MAD = self.median(MAD)
 
     new_list = []
     for v in values:
@@ -165,13 +168,19 @@ class OutlierDetection:
         new_list.append(v)
     return new_list
 
+  def median(self, values):
+    to_return = 0
+    if len(values) == 0: to_return = 0
+    elif len(values) % 2 == 1: to_return = values[int(len(values) / 2)]
+    else: to_return = (values[int(len(values) / 2) - 1] + values[int(len(values) / 2)]) / 2
+    return to_return
 
   def remove_outliers_new_method(self, values, o_star=None):
     '''
     assume values are sorted
     '''
 
-    median = statistics.median(values)
+    median = self.median(values)
     if not o_star:
       values_after_mad = self.remove_outliers_mad_method(values, median)
       o_star = abs((len(values_after_mad) - len(values))/ len(values))
@@ -197,11 +206,10 @@ class OutlierDetection:
     print("lprev={}, rprev={}".format(l_prev, r_prev))
     sorted_values_removed_ends = self.remove_outliers_each_side(values, l_prev, r_prev)
     # return sorted_values_removed_ends
-    median = statistics.median(sorted_values_removed_ends)
+    median = self.median(sorted_values_removed_ends)
     mean = sum(sorted_values_removed_ends)/len(sorted_values_removed_ends)
     std_dev = self.get_std_deviation(sorted_values_removed_ends, median)
     sorted_values = self.remove_outliers_deviation_method(values, median, std_dev)
-    print(len(sorted_values))
     return sorted_values
 
 
@@ -311,7 +319,7 @@ class OutlierDetection:
 
         # sort data and extract range of values
         data_without_outliers.sort()
-        value_range[method][0] += statistics.median(data_without_outliers)
+        value_range[method][0] += self.median(data_without_outliers)
         value_range[method][1] += data_without_outliers[0]
         value_range[method][2] += data_without_outliers[-1]
 

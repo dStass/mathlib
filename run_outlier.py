@@ -29,7 +29,7 @@ data, pdf_set = d.generate_data_with_outliers(
   outlier_sides = OUTLIER_SIDES,
   N = [SAMPLE_SIZE])
 
-cleaned_data = o.remove_outliers(np.array(data), "MAD")
+cleaned_data = o.remove_outliers(np.array(data), "NEW")
 
 cleaned_set = set(cleaned_data)
 
