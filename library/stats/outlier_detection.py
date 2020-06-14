@@ -114,6 +114,9 @@ class OutlierDetection:
     elif method == "PERCENTILE_2.5":
       # Remove 5% off both ends of dataset
       sorted_values = self.remove_outliers_percentile_method(sorted_values, 0.025)
+    
+    elif method == "NEW":
+      sorted_values = self.remove_outliers_new_method(sorted_values)
 
     return sorted_values
 
@@ -145,11 +148,11 @@ class OutlierDetection:
       remove_right += 1
 
     if (remove_left + remove_right > len(values)): return
-    return values[remove_left : - remove_right - 1]
+    return values[remove_left : len(values) - remove_right]
 
   # https://en.wikipedia.org/wiki/Median_absolute_deviation
   def remove_outliers_mad_method(self, values, median):
-    CUT_OFF = 3.0
+    CUT_OFF = 3
     MAD = []
     for v in values:
       MAD.append(abs(v - median))
@@ -160,8 +163,91 @@ class OutlierDetection:
       modified_z_score = 0.6745 * abs(v - median) / MAD
       if modified_z_score < CUT_OFF:
         new_list.append(v)
-
     return new_list
+
+
+  def remove_outliers_new_method(self, values, o_star=None):
+    '''
+    assume values are sorted
+    '''
+
+    median = statistics.median(values)
+    if not o_star:
+      values_after_mad = self.remove_outliers_mad_method(values, median)
+      o_star = abs((len(values_after_mad) - len(values))/ len(values))
+    # print("afterMAD:", len(values_after_mad), "o* = ", o_star)
+
+
+    eps_star = 0.0000000000000005
+    # we can avoid this step by making first choice eps_k_+ and let r_initial = o_star and l_initial = 0
+    
+    l_prev = 0
+    r_prev = o_star
+    eps_k_abs = o_star / 2 # absolute value of eps_k
+
+    while eps_k_abs > eps_star:
+      choice = self.new_method_make_choice(values, median, l_prev, r_prev, eps_k_abs)  # l + eps_k
+      if choice == 0: break
+      eps_k = eps_k_abs if choice == 1 else -eps_k_abs
+      l_prev += eps_k
+      r_prev -= eps_k
+      eps_k_abs /= 2
+
+    print("Detected skewness: [{},{}]".format(l_prev / o_star * 100, r_prev / o_star * 100))
+    print("lprev={}, rprev={}".format(l_prev, r_prev))
+    sorted_values_removed_ends = self.remove_outliers_each_side(values, l_prev, r_prev)
+    # return sorted_values_removed_ends
+    median = statistics.median(sorted_values_removed_ends)
+    mean = sum(sorted_values_removed_ends)/len(sorted_values_removed_ends)
+    std_dev = self.get_std_deviation(sorted_values_removed_ends, median)
+    sorted_values = self.remove_outliers_deviation_method(values, median, std_dev)
+    print(len(sorted_values))
+    return sorted_values
+
+
+  def remove_outliers_each_side(self, values, left, right):
+    fr = int(left * len(values)) + 1
+    to = len(values) - int(right*len(values))
+    to_return = values[fr:to]
+    print("from:{} to {}, len={}".format(fr, to, len(to_return)))
+    return to_return
+
+  def new_method_make_choice(self, values, median, l_k, r_k, eps_k_abs):
+    '''
+
+    '''
+    NO_CHOICE_MARGIN = 0.0000000000000005
+
+    l_k *= len(values)
+    r_k *= len(values)
+    eps_k_abs *= len(values)
+
+    # choice 1: l + eps_k_abs, r + eps_k_abs
+    l_k_1 = values[int(l_k + eps_k_abs)]
+    # r_k_1 = r_k + eps_k_abs
+
+    # choice 2: l - eps_k_abs, r - eps_k_abs
+    # l_k_2 = l_k - eps_k_abs
+    r_k_2 = values[int(-r_k - eps_k_abs-1)]
+    
+
+    # look at difference from median
+    choice_1_difference = abs(median - l_k_1)
+    choice_2_difference = abs(median - r_k_2)
+    # print(choice_1_difference, choice_2_difference, choice_1_difference/choice_2_difference, l_k, r_k, l_k_1, r_k_2)
+    if choice_1_difference == choice_2_difference or abs(1 - choice_1_difference/choice_2_difference) < NO_CHOICE_MARGIN: return 0
+    elif choice_1_difference > choice_2_difference: return 1
+    else: return 2
+
+    # technique 2:
+    # initial sums arr[0] -> arr[l_k] and arr[-1] -> arr[-r_k - 1]
+    # choice 1: sum an array from arr[0] -> arr[l_k_1] and from arr[-1] -> arr[-r_k_1 - 1]
+    # choice 2: sum arr[0] -> arr[l_k_2] and from arr[-1] -> arr[-r_k_2 - 1]
+    
+
+    
+
+
 
   def write_to_csv(self, file_name, data):
     ext = '.csv'

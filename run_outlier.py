@@ -11,22 +11,25 @@ g = GammaDistribution()
 o = OutlierDetection()
 d = n
 
-MEAN = [100, 200]
-SAMPLE_SIZE = 100000
-OUTLIER_FRAC = [0.1]
-NUM_OUTLIER_SOURCES = [4]
+MEAN = [200, 600]
+SAMPLE_SIZE = 50000
+OUTLIER_FRAC = [0.01]
+FIRST_SKEW = [0.9]
+NUM_OUTLIER_SOURCES = [20]
+OUTLIER_SIDES = [-1]
 granurality = 100
+
 # pdf_set = [(0.9, 0, 5), (0.05, -50, 3), (0.05, 35, 1)]
 
 data, pdf_set = d.generate_data_with_outliers(
   mean=MEAN,
   outlier_amount=OUTLIER_FRAC,
+  outlier_first_skew=FIRST_SKEW,
   num_outlier_sources = NUM_OUTLIER_SOURCES,
+  outlier_sides = OUTLIER_SIDES,
   N = [SAMPLE_SIZE])
 
-cleaned_data = o.remove_outliers(np.array(data), "MEDIAN_MODIFIED")
-
-# data = [(d, 0) for d in data]
+cleaned_data = o.remove_outliers(np.array(data), "MAD")
 
 cleaned_set = set(cleaned_data)
 
@@ -48,4 +51,4 @@ print("perr = {}%".format(100*round(percentage_error,4)))
 print("detected: {} compared to {}".format(len(removed_points), OUTLIER_FRAC[0]*SAMPLE_SIZE))
 
 p.plot_data_sets([cleaned_data, distribution_curve, removed_points], show=True)
-p.save("dist_outliers")
+# p.save("dist_outliers")
