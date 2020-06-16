@@ -230,6 +230,8 @@ class NormalDistribution(Distribution):
           break
       current_set_index += 1
 
+
+
     return pdf_set
   
   def within_acceptable_deviation(self, value, pdf_i):

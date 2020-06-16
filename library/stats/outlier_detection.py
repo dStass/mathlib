@@ -80,7 +80,7 @@ class OutlierDetection:
       # MAD outlier detection method
       # https://en.wikipedia.org/wiki/Median_absolute_deviation
 
-      median = self.median(sorted_values)
+      median = self.median_sorted(sorted_values)
       sorted_values = self.remove_outliers_mad_method(sorted_values, median)
 
     elif method == "MEAN":
@@ -98,14 +98,14 @@ class OutlierDetection:
 
     elif method == "MEDIAN":
       # Same as MEAN method using
-      median = self.median(sorted_values)
+      median = self.median_sorted(sorted_values)
       std_dev = self.get_std_deviation(sorted_values, median)
       sorted_values = self.remove_outliers_deviation_method(sorted_values, median, std_dev)
 
     elif method == "MEDIAN_MODIFIED":
       # Same as MEAN method using
       sorted_values_removed_ends = self.remove_outliers_percentile_method(sorted_values, 0.05)
-      median = self.median(sorted_values_removed_ends)
+      median = self.median_sorted(sorted_values_removed_ends)
       std_dev = self.get_std_deviation(sorted_values_removed_ends, median)
       sorted_values = self.remove_outliers_deviation_method(sorted_values, median, std_dev)
 
@@ -114,12 +114,14 @@ class OutlierDetection:
       sorted_values = self.remove_outliers_percentile_method(sorted_values, 0.05)
 
     elif method == "PERCENTILE_2.5":
-      # Remove 5% off both ends of dataset
+      # Remove 2.5% off both ends of dataset
       sorted_values = self.remove_outliers_percentile_method(sorted_values, 0.025)
     
     elif method == "NEW":
-      sorted_values = self.remove_outliers_new_method(sorted_values)
+      sorted_values = self.remove_outliers_new_method(sorted_values, 0.02)
 
+    elif method == "NEW_MAD":
+      sorted_values = self.remove_outliers_new_mad_method(sorted_values, 0.02, 0.07)
     return sorted_values
 
   def remove_outliers_percentile_method(self, values, interpercentile):
@@ -159,7 +161,7 @@ class OutlierDetection:
     for v in values:
       MAD.append(abs(v - median))
     MAD.sort()
-    MAD = self.median(MAD)
+    MAD = self.median_sorted(MAD)
 
     new_list = []
     for v in values:
@@ -168,11 +170,12 @@ class OutlierDetection:
         new_list.append(v)
     return new_list
 
-  def median(self, values):
+  def median_sorted(self, values, left=None, right=None):
     to_return = 0
-    if len(values) == 0: to_return = 0
-    elif len(values) % 2 == 1: to_return = values[int(len(values) / 2)]
-    else: to_return = (values[int(len(values) / 2) - 1] + values[int(len(values) / 2)]) / 2
+    if not left: left, right = 0, len(values)
+    if right - left == 0: to_return = 0
+    elif (right - left) % 2 == 1: to_return = values[int((right - left) / 2)]
+    else: to_return = (values[int((right-left) / 2) - 1] + values[int((right-left) / 2)]) / 2
     return to_return
 
   def remove_outliers_new_method(self, values, o_star=None):
@@ -180,7 +183,7 @@ class OutlierDetection:
     assume values are sorted
     '''
 
-    median = self.median(values)
+    median = self.median_sorted(values)
     if not o_star:
       values_after_mad = self.remove_outliers_mad_method(values, median)
       o_star = abs((len(values_after_mad) - len(values))/ len(values))
@@ -196,26 +199,30 @@ class OutlierDetection:
 
     while eps_k_abs > eps_star:
       choice = self.new_method_make_choice(values, median, l_prev, r_prev, eps_k_abs)  # l + eps_k
-      if choice == 0: break
+      if choice == 0:
+        eps_k_abs /= 2
+        continue
       eps_k = eps_k_abs if choice == 1 else -eps_k_abs
-      l_prev += eps_k
-      r_prev -= eps_k
+      if l_prev + eps_k >= 0 and r_prev - eps_k >= 0:
+        l_prev += eps_k
+        r_prev -= eps_k
       eps_k_abs /= 2
 
     print("Detected skewness: [{},{}]".format(l_prev / o_star * 100, r_prev / o_star * 100))
     print("lprev={}, rprev={}".format(l_prev, r_prev))
     sorted_values_removed_ends = self.remove_outliers_each_side(values, l_prev, r_prev)
-    # return sorted_values_removed_ends
-    median = self.median(sorted_values_removed_ends)
-    mean = sum(sorted_values_removed_ends)/len(sorted_values_removed_ends)
-    std_dev = self.get_std_deviation(sorted_values_removed_ends, median)
-    sorted_values = self.remove_outliers_deviation_method(values, median, std_dev)
-    return sorted_values
+    return sorted_values_removed_ends
+
+    # median = self.median_sorted(sorted_values_removed_ends)
+    # # mean = sum(sorted_values_removed_ends)/len(sorted_values_removed_ends)
+    # std_dev = self.get_std_deviation(sorted_values_removed_ends, median)
+    # sorted_values = self.remove_outliers_deviation_method(values, median, std_dev)
+    # return sorted_values
 
 
   def remove_outliers_each_side(self, values, left, right):
-    fr = int(left * len(values)) + 1
-    to = len(values) - int(right*len(values))
+    fr = max(0, int(left * len(values)))
+    to = min(-1, - int(right*len(values) - 1))
     to_return = values[fr:to]
     print("from:{} to {}, len={}".format(fr, to, len(to_return)))
     return to_return
@@ -224,7 +231,8 @@ class OutlierDetection:
     '''
 
     '''
-    NO_CHOICE_MARGIN = 0.0000000000000005
+    NO_CHOICE_MARGIN = 0.0000000005
+    # print(l_k, r_k)
 
     l_k *= len(values)
     r_k *= len(values)
@@ -232,20 +240,44 @@ class OutlierDetection:
 
     # choice 1: l + eps_k_abs, r + eps_k_abs
     l_k_1 = values[int(l_k + eps_k_abs)]
-    # r_k_1 = r_k + eps_k_abs
-
+    # r_k_1 = values[int(r_k + eps_k_abs)]
+    median_1 = self.median_sorted(values, l_k_1, median)
+    diff_median1 = abs(abs(median) - abs(median_1))
     # choice 2: l - eps_k_abs, r - eps_k_abs
-    # l_k_2 = l_k - eps_k_abs
-    r_k_2 = values[int(-r_k - eps_k_abs-1)]
+    # l_k_2 = values[int(-l_k - eps_k_abs)]
+    r_k_2 = values[int(-r_k - eps_k_abs)]
+    median_2 = self.median_sorted(values, median, r_k_2)
+    diff_median2 = abs(abs(median) - abs(median_2))
     
+    choice = None
 
     # look at difference from median
     choice_1_difference = abs(median - l_k_1)
     choice_2_difference = abs(median - r_k_2)
+    print("clos=", abs(1 - diff_median1 / diff_median2))
+
+    if diff_median1 == diff_median2 or abs(1 - diff_median1 / diff_median2) < NO_CHOICE_MARGIN: choice = 0
+    elif diff_median1 < diff_median2: choice = 1
+    else: choice = 2
+
+    # if choice_1_difference == choice_2_difference or abs(1 - choice_1_difference/choice_2_difference) < NO_CHOICE_MARGIN: choice = 0
+    # elif choice_1_difference > choice_2_difference: choice = 1
+    # else: choice = 2
+
+
+    print(diff_median1, diff_median2, choice)
+
+    return choice
     # print(choice_1_difference, choice_2_difference, choice_1_difference/choice_2_difference, l_k, r_k, l_k_1, r_k_2)
-    if choice_1_difference == choice_2_difference or abs(1 - choice_1_difference/choice_2_difference) < NO_CHOICE_MARGIN: return 0
-    elif choice_1_difference > choice_2_difference: return 1
-    else: return 2
+
+    # if diff_median1 == diff_median2 or abs(1 - diff_median1 / diff_median2) < NO_CHOICE_MARGIN: choice = 0
+    # elif diff_median1 < diff_median2: choice = 1
+    # else: choice = 2
+
+    # print("choice=", choice)
+    # return choice
+
+
 
     # technique 2:
     # initial sums arr[0] -> arr[l_k] and arr[-1] -> arr[-r_k - 1]
@@ -319,7 +351,7 @@ class OutlierDetection:
 
         # sort data and extract range of values
         data_without_outliers.sort()
-        value_range[method][0] += self.median(data_without_outliers)
+        value_range[method][0] += self.median_sorted(data_without_outliers)
         value_range[method][1] += data_without_outliers[0]
         value_range[method][2] += data_without_outliers[-1]
 
