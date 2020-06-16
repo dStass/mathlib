@@ -219,6 +219,62 @@ class OutlierDetection:
     # sorted_values = self.remove_outliers_deviation_method(values, median, std_dev)
     # return sorted_values
 
+  def remove_outliers_new_mad_method(self, values, o_star_lo, o_star_hi):
+    '''
+    assume values are sorted
+    '''
+
+    median = self.median_sorted(values)
+    # if not o_star:
+    #   values_after_mad = self.remove_outliers_mad_method(values, median)
+    #   o_star = abs((len(values_after_mad) - len(values))/ len(values))
+    # print("afterMAD:", len(values_after_mad), "o* = ", o_star)
+
+
+    eps_star = 0.0000000000000005
+    # we can avoid this step by making first choice eps_k_+ and let r_initial = o_star and l_initial = 0
+    
+    l_prev_lo, l_prev_hi = 0, 0
+    r_prev_lo, r_prev_hi = o_star_lo, o_star_hi
+
+    # do LOW first
+    eps_k_abs = o_star_lo / 2
+
+    while eps_k_abs > eps_star:
+      choice = self.new_method_make_choice(values, median, l_prev_lo, r_prev_lo, eps_k_abs)  # l + eps_k
+      if choice == 0:
+        eps_k_abs /= 2
+        continue
+      eps_k = eps_k_abs if choice == 1 else -eps_k_abs
+      if l_prev_lo + eps_k >= 0 and r_prev_lo - eps_k >= 0:
+        l_prev_lo += eps_k
+        r_prev_lo -= eps_k
+      eps_k_abs /= 2
+
+    # do HIGH
+    eps_k_abs = o_star_hi / 2
+    
+    while eps_k_abs > eps_star:
+      choice = self.new_method_make_choice(values, median, l_prev_hi, r_prev_hi, eps_k_abs)  # l + eps_k
+      if choice == 0:
+        eps_k_abs /= 2
+        continue
+      eps_k = eps_k_abs if choice == 1 else -eps_k_abs
+      if l_prev_hi + eps_k >= 0 and r_prev_hi - eps_k >= 0:
+        l_prev_hi += eps_k
+        r_prev_hi -= eps_k
+      eps_k_abs /= 2
+    
+    # remove the low estimates first
+    sorted_values_removed_ends = self.remove_outliers_each_side(values, l_prev_lo, r_prev_lo)
+    return self.remove_outliers_mad_method(sorted_values_removed_ends, median)
+
+
+    # print("Detected skewness: [{},{}]".format(l_prev / o_star * 100, r_prev / o_star * 100))
+    # print("lprev={}, rprev={}".format(l_prev, r_prev))
+    return sorted_values_removed_ends
+
+
 
   def remove_outliers_each_side(self, values, left, right):
     fr = max(0, int(left * len(values)))
@@ -254,7 +310,7 @@ class OutlierDetection:
     # look at difference from median
     choice_1_difference = abs(median - l_k_1)
     choice_2_difference = abs(median - r_k_2)
-    print("clos=", abs(1 - diff_median1 / diff_median2))
+    # print("clos=", abs(1 - diff_median1 / diff_median2))
 
     if diff_median1 == diff_median2 or abs(1 - diff_median1 / diff_median2) < NO_CHOICE_MARGIN: choice = 0
     elif diff_median1 < diff_median2: choice = 1
@@ -265,7 +321,7 @@ class OutlierDetection:
     # else: choice = 2
 
 
-    print(diff_median1, diff_median2, choice)
+    # print(diff_median1, diff_median2, choice)
 
     return choice
     # print(choice_1_difference, choice_2_difference, choice_1_difference/choice_2_difference, l_k, r_k, l_k_1, r_k_2)

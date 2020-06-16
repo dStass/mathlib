@@ -14,7 +14,7 @@ d = n
 
 MEAN = [200, 600]
 SAMPLE_SIZE = 1000000
-OUTLIER_FRAC = [0.02]
+OUTLIER_FRAC = [0.05]
 FIRST_SKEW = [0.7]
 NUM_OUTLIER_SOURCES = [2]
 OUTLIER_SIDES = [1, -1]
@@ -31,7 +31,7 @@ data, pdf_set = d.generate_data_with_outliers(
   N = [SAMPLE_SIZE])
   
 t1 = time.time()
-cleaned_data = o.remove_outliers(np.array(data), "NEW")
+cleaned_data = o.remove_outliers(np.array(data), "NEW_MAD")
 t2 = time.time()
 
 
